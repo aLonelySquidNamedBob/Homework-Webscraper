@@ -54,7 +54,6 @@ content = soup.find('li', class_='timeline__list-item')
 homework_els = content.find_all('div', class_='panel')
 
 dates = []
-updatelist = []
 subjects = []
 summaries = []
 completed = []
@@ -87,21 +86,15 @@ for homework_e in homework_els:
     summaries.append(summary)
     completed.append(complete)
     hand_in_types.append(hand_in_type)
-    updatelist.append('')
-
-# Fit update time
-updatelist.pop(-1)
-updatelist.append(date)
 
 # Add date/time to the bottom of CSV
-
 for i in range(2):
-    summaries.append('')
-    hand_in_types.append('')
-    completed.append('')
+    summaries.append(' ')
+    hand_in_types.append(' ')
+    completed.append(' ')
     if i == 0:
-        dates.append('')
-        subjects.append('')
+        dates.append(' ')
+        subjects.append(' ')
     else:
         dates.append('Last updated:')
         subjects.append(date)
@@ -112,22 +105,26 @@ df2 = pd.DataFrame({
     'Matiere': subjects,
     'Contenu': summaries,
     'Rendre': hand_in_types,
-    'Fait': completed,
-    'Last updated': updatelist
+    'Fait': completed
 })
 
 # Check to see if changed
 # Send notifications
 # Save pandas dataframe as CSV
-if df1.get('Contenu').to_string() == df2.get('Contenu').to_string() and df1.get('Fait').to_string() == df2.get(
-        'Fait').to_string():
+if df1.get('Contenu').to_string() == df2.get('Contenu').to_string() and df1.get('Fait').to_string() == df2.get('Fait').to_string():
     print(f'{date} Same')
     if 'linux' in osgroup:
         notify.send('Updated')
+        if 'arandomcomputer' in linuxgroup:
+            df2.to_csv('~/Desktop/Homework.csv', index=False)
+        else:
+            df2.to_csv('Homework.csv', index=False)
     else:
         os.system('cmd /c "curl https://notify.run/ty0NllFAqXc43wUs -d "Updated""')
+        df2.to_csv('C:\\Users\\nicop_ny6irwr\\OneDrive\\Desktop\\Homework.csv', index=False)
+
 else:
-    if df1.get('Contenu').to_string() == df2.get('Contenu').to_string():
+    if df1.get('Contenu').to_string().strip() == df2.get('Contenu').to_string().strip():
         print(f'{date} Changed  Saving...')
         if 'linux' in osgroup:
             notify.send('Changed')
@@ -136,8 +133,8 @@ else:
             else:
                 df2.to_csv('Homework.csv', index=False)
         else:
-            df2.to_csv('C:\\Users\\nicop_ny6irwr\\OneDrive\\Desktop\\Homework.csv', index=False)
             os.system('cmd /c "curl https://notify.run/ty0NllFAqXc43wUs -d "Changed""')
+            df2.to_csv('C:\\Users\\nicop_ny6irwr\\OneDrive\\Desktop\\Homework.csv', index=False)
     else:
         print(f'{date} New work  Saving...')
         if 'linux' in osgroup:
@@ -147,5 +144,5 @@ else:
             else:
                 df2.to_csv('Homework.csv', index=False)
         else:
-            df2.to_csv('C:\\Users\\nicop_ny6irwr\\OneDrive\\Desktop\\Homework.csv', index=False)
             os.system('cmd /k "curl https://notify.run/ty0NllFAqXc43wUs -d "New Homework""')
+            df2.to_csv('C:\\Users\\nicop_ny6irwr\\OneDrive\\Desktop\\Homework.csv', index=False)
