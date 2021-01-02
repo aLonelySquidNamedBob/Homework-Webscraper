@@ -54,6 +54,7 @@ content = soup.find('li', class_='timeline__list-item')
 homework_els = content.find_all('div', class_='panel')
 
 dates = []
+updatelist = []
 subjects = []
 summaries = []
 completed = []
@@ -86,6 +87,11 @@ for homework_e in homework_els:
     summaries.append(summary)
     completed.append(complete)
     hand_in_types.append(hand_in_type)
+    updatelist.append('')
+
+# Fit update time
+updatelist.pop(-1)
+updatelist.append(date)
 
 # Save info to pandas dataframe
 df2 = pd.DataFrame({
@@ -93,7 +99,8 @@ df2 = pd.DataFrame({
     'Matiere': subjects,
     'Contenu': summaries,
     'Rendre': hand_in_types,
-    'Fait': completed
+    'Fait': completed,
+    'Last updated': updatelist
 })
 
 # Check to see if changed
