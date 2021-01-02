@@ -2,26 +2,37 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import platform
-import os
-from notify_run import Notify
+from datetime import datetime
 
+# Setup and format date
+now = datetime.now()
+date = ' '
+datel = now.strftime("%a %d %b %Y %H:%M:%S")
+datel = datel.split(' ')
+datel[1] = str(int(datel[1]))
+date = date.join(datel)
+
+# Setup OS and notification system
+# Read CSV
 osgroup = platform.system().lower()
 if 'linux' in osgroup:
-    df1 = pd.read_csv('~/Desktop/Homework.csv')
-elif 'windows' in osgroup:
+    from notify_run import Notify
+
+    notify = Notify()
+    linuxgroup = str(platform.uname()).lower()
+
+    if 'arandomcomputer' in linuxgroup:
+        df1 = pd.read_csv('~/Desktop/Homework.csv')
+    else:
+        df = pd.read_csv('Homework.csv')
+else:
+    import os
+
     df1 = pd.read_csv('C:\\Users\\nicop_ny6irwr\\OneDrive\\Desktop\\Homework.csv')
 
-notify = Notify()
-
+# Setup webscraping and login details
 login_url = 'https://cas.kosmoseducation.com/login'
 page_url = 'https://lfjm.kosmoseducation.com/sg.do?PROC=TRAVAIL_A_FAIRE&ACTION=AFFICHER_ELEVES_TAF&filtreAVenir=true'
-
-dates = []
-subjects = []
-summaries = []
-completed = []
-hand_in_types = []
-hand_in_type = ''
 
 login = {
     'username': 'Pullen.nicolas',
@@ -32,14 +43,24 @@ login = {
     'submit': 'Confirm'
 }
 
+# Start virtual session
 with requests.Session() as s:
     post = s.post(login_url, login)
     page = s.get(page_url)
 
+# Find content
 soup = BeautifulSoup(page.content, 'html.parser')
 content = soup.find('li', class_='timeline__list-item')
 homework_els = content.find_all('div', class_='panel')
 
+dates = []
+subjects = []
+summaries = []
+completed = []
+hand_in_types = []
+hand_in_type = ''
+
+# Parse HTML
 for homework_e in homework_els:
     complete = "Non fait"
     estimated_time_e = homework_e.find('span', class_='pull-right')
@@ -58,7 +79,7 @@ for homework_e in homework_els:
     else:
         hand_in_type = "A l'ecole"
     subject = subject_e.text.replace(estimated_time_e.text.strip(), ' ').strip()
-    summary = summary_e.text.replace('Exercices :', ' ').strip().capitalize()
+    summary = summary_e.text.replace('Exercices :', '').replace('\n', '').replace('  ', '').strip().capitalize()
     due_date = due_date_e.text.strip().capitalize()
     subjects.append(subject)
     dates.append(due_date)
@@ -66,6 +87,7 @@ for homework_e in homework_els:
     completed.append(complete)
     hand_in_types.append(hand_in_type)
 
+# Save info to pandas dataframe
 df2 = pd.DataFrame({
     'Date a rendre': dates,
     'Matiere': subjects,
@@ -74,23 +96,36 @@ df2 = pd.DataFrame({
     'Fait': completed
 })
 
-if df1.get('Contenu').to_string() == df2.get('Contenu').to_string() and df1.get('Fait').to_string() == df2.get('Fait').to_string():
-    print('Same')
-    os.system('cmd /c "curl https://notify.run/ty0NllFAqXc43wUs -d "Updated""')
+# Check to see if changed
+# Send notifications
+# Save pandas dataframe as CSV
+if df1.get('Contenu').to_string() == df2.get('Contenu').to_string() and df1.get('Fait').to_string() == df2.get(
+        'Fait').to_string():
+    print(f'{date} Same')
+    if 'linux' in osgroup:
+        notify.send('Updated')
+    else:
+        os.system('cmd /c "curl https://notify.run/ty0NllFAqXc43wUs -d "Updated""')
 else:
     if df1.get('Contenu').to_string() == df2.get('Contenu').to_string():
-        print('Not same\nSaving...')
+        print(f'{date} Changed  Saving...')
         if 'linux' in osgroup:
             notify.send('Changed')
-            df2.to_csv('~/Desktop/Homework.csv', index=False)
-        elif 'windows' in osgroup:
+            if 'arandomcomputer' in linuxgroup:
+                df2.to_csv('~/Desktop/Homework.csv', index=False)
+            else:
+                df2.to_csv('Homework.csv', index=False)
+        else:
             df2.to_csv('C:\\Users\\nicop_ny6irwr\\OneDrive\\Desktop\\Homework.csv', index=False)
             os.system('cmd /c "curl https://notify.run/ty0NllFAqXc43wUs -d "Changed""')
     else:
-        print('New work\nSaving...')
+        print(f'{date} New work  Saving...')
         if 'linux' in osgroup:
-            df2.to_csv('~/Desktop/Homework.csv', index=False)
-            notify.send('Nouveau devoir')
-        elif 'windows' in osgroup:
+            notify.send('New Homework')
+            if 'arandomcomputer' in linuxgroup:
+                df2.to_csv('~/Desktop/Homework.csv', index=False)
+            else:
+                df2.to_csv('Homework.csv', index=False)
+        else:
             df2.to_csv('C:\\Users\\nicop_ny6irwr\\OneDrive\\Desktop\\Homework.csv', index=False)
-            os.system('cmd /k "curl https://notify.run/ty0NllFAqXc43wUs -d "Nouveau devoir""')
+            os.system('cmd /k "curl https://notify.run/ty0NllFAqXc43wUs -d "New Homework""')
