@@ -93,6 +93,19 @@ for homework_e in homework_els:
 updatelist.pop(-1)
 updatelist.append(date)
 
+# Add date/time to the bottom of CSV
+
+for i in range(2):
+    summaries.append('')
+    hand_in_types.append('')
+    completed.append('')
+    if i == 0:
+        dates.append('')
+        subjects.append('')
+    else:
+        dates.append('Last updated:')
+        subjects.append(date)
+
 # Save info to pandas dataframe
 df2 = pd.DataFrame({
     'Date a rendre': dates,
