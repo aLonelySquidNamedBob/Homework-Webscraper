@@ -50,7 +50,7 @@ with requests.Session() as s:
 
 # Find content
 soup = BeautifulSoup(page.content, 'html.parser')
-content = soup.find('li', class_='timeline__list-item')
+content = soup.find('ul', class_='timeline__list js-timeline__list')
 homework_els = content.find_all('div', class_='panel')
 
 dates = []
